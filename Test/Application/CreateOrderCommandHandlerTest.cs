@@ -1,13 +1,16 @@
 ﻿using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.Extensions.Logging;
 using Moq;
 using OrderService.Application.Commands.CreateOrder;
 using OrderService.Application.DTOs;
 using OrderService.Domain.Order;
 using OrderService.Domain.Product;
 using OrderService.Domain.Shared;
+using OrderService.Infrastructure.Middleware;
 using OrderService.Infrastructure.Repositories;
+using System.Threading;
 using Xunit;
 
 namespace Test.Application
@@ -17,9 +20,10 @@ namespace Test.Application
         private readonly Mock<IOrderRepository> _orderRepositoryMock = new();
         private readonly Mock<IProductRepository> _productRepositoryMock = new();
         private readonly Mock<IValidator<CreateOrderCommand>> _validatorMock = new();
+        private readonly Mock<ILogger<CreateOrderCommandHandler>> _logger = new();
 
         private CreateOrderCommandHandler CreateHandler() =>
-            new CreateOrderCommandHandler(_orderRepositoryMock.Object, _productRepositoryMock.Object, _validatorMock.Object);
+            new CreateOrderCommandHandler(_orderRepositoryMock.Object, _productRepositoryMock.Object, _validatorMock.Object, _logger.Object);
 
         private CreateOrderCommand GetValidCommand(List<OrderItemRequestDto> orderItems)
         {
@@ -47,11 +51,11 @@ namespace Test.Application
                 .ReturnsAsync(new ValidationResult());
 
             _productRepositoryMock
-                .Setup(repo => repo.FindByIdsAsync(It.IsAny<List<string>>()))
+                .Setup(repo => repo.FindByIdsAsync(It.IsAny<List<string>>(), CancellationToken.None))
                 .ReturnsAsync(new List<Product> { product });
 
             _orderRepositoryMock
-                .Setup(repo => repo.AddAsync(It.IsAny<Order>()))
+                .Setup(repo => repo.AddAsync(It.IsAny<Order>(), CancellationToken.None))
                 .Returns(Task.CompletedTask)
                 ;
 
@@ -59,6 +63,7 @@ namespace Test.Application
             var result = await handler.Handle(command, CancellationToken.None);
 
             result.Should().NotBeNullOrEmpty();
+            Guid.TryParse(result, out var parsedGuid).Should().BeTrue();
         }
 
         [Fact]
@@ -91,7 +96,7 @@ namespace Test.Application
                 .ReturnsAsync(new ValidationResult());
 
             _productRepositoryMock
-                .Setup(repo => repo.FindByIdsAsync(It.IsAny<List<string>>()))
+                .Setup(repo => repo.FindByIdsAsync(It.IsAny<List<string>>(), CancellationToken.None))
                 .ReturnsAsync(new List<Product>());
 
             Func<Task> act = async () => await handler.Handle(command, CancellationToken.None);

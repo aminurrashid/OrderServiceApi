@@ -4,7 +4,7 @@ namespace OrderService.Infrastructure.Repositories
 {
     public interface IOrderRepository
     {
-        Task AddAsync(Order order);
-        Task<Order?> GetByIdAsync(string orderNumber);
+        Task AddAsync(Order order, CancellationToken cancellationToken);
+        Task<Order?> GetByIdAsync(string orderNumber, CancellationToken cancellationToken);
     }
 }

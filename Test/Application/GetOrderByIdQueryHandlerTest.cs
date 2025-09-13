@@ -3,6 +3,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Moq;
 using OrderService.Application.DTOs;
+using OrderService.Application.Factories;
 using OrderService.Application.Queries.GetOrderById;
 using OrderService.Domain.Order;
 using OrderService.Domain.Product;
@@ -42,23 +43,22 @@ namespace Test.Application
         private Order GetFakeOrder()
         {
             var items = new List<OrderItemRequestDto>
-        {
-            new( "p1", "Product 1", 2, 10.0m),
-            new( "p2", "Product 2", 1, 20.0m)
-        };
+            {
+                new( "p1", "Product 1", 2, 10.0m),
+                new( "p2", "Product 2", 1, 20.0m)
+            };
             var products = new List<Product>
-        {
-            new("p1", "Product 1", 10.0m, 100),
-            new("p2", "Product 2", 20.0m, 50)
-        };
-            return new Order(
+            {
+                new("p1", "Product 1", 10.0m, 100),
+                new("p2", "Product 2", 20.0m, 50)
+            };
+            return OrderFactory.Create(
                 "123 Main St",
                 "customer@example.com",
                 "4111111111111111",
                 items,
                 products
             );
-
         }
 
 
@@ -75,7 +75,7 @@ namespace Test.Application
 
 
             _orderRepoMock
-                .Setup(r => r.GetByIdAsync(order.Id))
+                .Setup(r => r.GetByIdAsync(order.Id, CancellationToken.None))
                 .ReturnsAsync(order);
 
             var result = await handler.Handle(query, CancellationToken.None);
@@ -114,7 +114,7 @@ namespace Test.Application
                 .ReturnsAsync(new ValidationResult());
 
             _orderRepoMock
-                .Setup(r => r.GetByIdAsync("order-123"))
+                .Setup(r => r.GetByIdAsync("order-123", CancellationToken.None))
                 .ReturnsAsync((Order?)null);
 
             var result = await handler.Handle(query, CancellationToken.None);

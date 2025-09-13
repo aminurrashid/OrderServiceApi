@@ -22,7 +22,7 @@ namespace OrderService.Application.Queries.GetOrderById
             if (!validationResult.IsValid)
                 throw new ValidationException(validationResult.Errors);
 
-            var order = await _repository.GetByIdAsync(request.OrderNumber);
+            var order = await _repository.GetByIdAsync(request.OrderNumber, cancellationToken);
             if (order is null) return null;
 
             var items = order.Items.Select(i => new OrderItemReponseDto

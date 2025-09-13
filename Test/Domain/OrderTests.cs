@@ -4,6 +4,7 @@ using OrderService.Domain.Product;
 using OrderService.Domain.Shared;
 using FluentAssertions;
 using Xunit;
+using OrderService.Application.Factories;
 
 namespace Test.Domain
 {
@@ -23,11 +24,11 @@ namespace Test.Domain
 
             var products = new List<Product> { product1, product2 };
 
-            var order = new Order(
-                address: "123 Mock Street",
-                email: "mock@example.com",
-                creditCard: "1234-5678-9012-3456",
-                productDtos: productDtos,
+            var order = OrderFactory.Create(
+                invoiceAddress: "123 Mock Street",
+                invoiceEmailAddress: "mock@example.com",
+                invoiceCreditCardNumber: "1234-5678-9012-3456",
+                items: productDtos,
                 products: products
             );
 
@@ -43,7 +44,7 @@ namespace Test.Domain
             var product2 = new Product("2", "Product B", 20.49m, 50);
             var products = new List<Product> { product1, product2 };
 
-            var order = new Order("addr", "a@b.com", "cc", new List<OrderItemRequestDto>(), products);
+            var order = OrderFactory.Create("addr", "a@b.com", "cc", new List<OrderItemRequestDto>(), products);
 
             order.Items.Should().BeEmpty();
         }
@@ -57,7 +58,7 @@ namespace Test.Domain
             {
                 new OrderItemRequestDto(product.Id, product.Name, 1, product.Price)
             };
-            var order = new Order("addr", "a@b.com", "cc", productDtos, products);
+            var order = OrderFactory.Create("addr", "a@b.com", "cc", productDtos, products);
 
             order.AddProduct(product, 2);
 
@@ -74,7 +75,7 @@ namespace Test.Domain
             {
                 new OrderItemRequestDto(product.Id, product.Name, 1, product.Price)
             };
-            var order = new Order("addr", "a@b.com", "cc", productDtos, products);
+            var order = OrderFactory.Create("addr", "a@b.com", "cc", productDtos, products);
 
             FluentActions.Invoking(() => order.AddProduct(product, 0))
                 .Should().Throw<DomainException>().WithMessage("Added quantity must be positive.");
@@ -85,7 +86,7 @@ namespace Test.Domain
         {
             var product = new Product("1", "Product A", 10.99m, 100);
             var products = new List<Product> { product };
-            var order = new Order("addr", "a@b.com", "cc", new List<OrderItemRequestDto>(), products);
+            var order = OrderFactory.Create("addr", "a@b.com", "cc", new List<OrderItemRequestDto>(), products);
 
             FluentActions.Invoking(() => order.AddProduct(null, 1))
                 .Should().Throw<DomainException>().WithMessage("Product cannot be null.");
@@ -96,7 +97,7 @@ namespace Test.Domain
         {
             var product = new Product("1", "Product A", 10.99m, 1);
             var products = new List<Product> { product };
-            var order = new Order("addr", "a@b.com", "cc", new List<OrderItemRequestDto>(), products);
+            var order = OrderFactory.Create("addr", "a@b.com", "cc", new List<OrderItemRequestDto>(), products);
 
             FluentActions.Invoking(() => order.AddProduct(product, 2))
                 .Should().Throw<DomainException>().WithMessage($"Not enough stock for product {product.Id}. Requested 2, available 1.");
@@ -113,7 +114,7 @@ namespace Test.Domain
             };
 
             FluentActions.Invoking(() =>
-                new Order("addr", "invalid-email", "cc", productDtos, products))
+                OrderFactory.Create("addr", "invalid-email", "cc", productDtos, products))
                 .Should().Throw<DomainException>().WithMessage("Invalid customer email.");
         }
 
@@ -128,7 +129,7 @@ namespace Test.Domain
             };
 
             FluentActions.Invoking(() =>
-                new Order(null, "a@b.com", "cc", productDtos, products))
+                OrderFactory.Create(null, "a@b.com", "cc", productDtos, products))
                 .Should().Throw<DomainException>().WithMessage("Shipping address is required.");
         }
     }

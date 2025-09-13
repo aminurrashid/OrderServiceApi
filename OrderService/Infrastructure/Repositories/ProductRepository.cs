@@ -4,7 +4,7 @@ namespace OrderService.Infrastructure.Repositories
 {
     public class ProductRepository : IProductRepository
     {
-        public Task<IEnumerable<Product>> FindByIdsAsync(List<string> productIds)
+        public Task<IEnumerable<Product>> FindByIdsAsync(List<string> productIds, CancellationToken cancellationToken)
         {
             var products = new List<Product>
             {

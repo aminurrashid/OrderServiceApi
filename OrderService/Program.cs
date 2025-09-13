@@ -17,11 +17,10 @@ public class Program
         builder.Host.UseSerilog((ctx, cfg) =>
         {
             cfg
-                .ReadFrom.Configuration(ctx.Configuration)
-                .Enrich.FromLogContext()
-                .Enrich.WithCorrelationId();
+                .ReadFrom.Configuration(ctx.Configuration);
         });
 
+        builder.Services.AddHttpContextAccessor();
         builder.Services.AddControllers();
 
         builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
@@ -46,7 +45,6 @@ public class Program
 
         var app = builder.Build();
 
-        app.UseLogCorrelationId();
         app.UseGlobalExceptionHandler();
 
         if (app.Environment.IsDevelopment())

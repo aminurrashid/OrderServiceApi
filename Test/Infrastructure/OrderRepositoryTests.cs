@@ -1,11 +1,12 @@
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using OrderService.Application.DTOs;
+using OrderService.Application.Factories;
 using OrderService.Domain.Order;
+using OrderService.Domain.Product;
 using OrderService.Infrastructure.Persistence;
 using OrderService.Infrastructure.Repositories;
-using OrderService.Application.DTOs;
-using OrderService.Domain.Product;
 using Xunit;
-using FluentAssertions;
 
 namespace Test.Infrastructure
 {
@@ -28,11 +29,11 @@ namespace Test.Infrastructure
             new OrderItemRequestDto(product.Id, product.Name, 2, product.Price)
         };
 
-            return new Order(
-                address: "123 Main St",
-                email: "test@example.com",
-                creditCard: "4111111111111111",
-                productDtos: productDtos,
+            return OrderFactory.Create(
+                invoiceAddress: "123 Main St",
+                invoiceEmailAddress: "test@example.com",
+                invoiceCreditCardNumber: "4111111111111111",
+                items: productDtos,
                 products: products
             );
         }
@@ -44,7 +45,7 @@ namespace Test.Infrastructure
             var repository = new OrderRepository(dbContext);
             var order = CreateOrder();
 
-            await repository.AddAsync(order);
+            await repository.AddAsync(order, CancellationToken.None);
 
             var exists = await dbContext.Orders.AnyAsync(o => o.Id == order.Id);
             exists.Should().BeTrue();
@@ -59,7 +60,7 @@ namespace Test.Infrastructure
             dbContext.Orders.Add(order);
             await dbContext.SaveChangesAsync();
 
-            var result = await repository.GetByIdAsync(order.Id);
+            var result = await repository.GetByIdAsync(order.Id, CancellationToken.None);
 
             result.Should().NotBeNull();
             result!.Id.Should().Be(order.Id);
@@ -72,7 +73,7 @@ namespace Test.Infrastructure
             var dbContext = CreateDbContext(nameof(GetByIdAsync_Should_Return_Null_When_Not_Exists));
             var repository = new OrderRepository(dbContext);
 
-            var result = await repository.GetByIdAsync("non-existent-id");
+            var result = await repository.GetByIdAsync("non-existent-id", CancellationToken.None);
 
             result.Should().BeNull();
         }

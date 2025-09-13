@@ -1,10 +1,10 @@
 ﻿
-using OrderService.Application.DTOs;
+using OrderService.Domain.Events;
 using OrderService.Domain.Shared;
 
 namespace OrderService.Domain.Order
 {
-    public class Order
+    public class Order : Entity
     {
         public string Id { get; private set; }
         public string InvoiceAddress { get; private set; }
@@ -17,7 +17,7 @@ namespace OrderService.Domain.Order
 
         private Order() { }
         
-        public Order(string address, string email, string creditCard, List<OrderItemRequestDto> productDtos, IEnumerable<Product.Product> products)
+        public Order(string address, string email, string creditCard, IEnumerable<Product.Product> products)
         {
             Id = Guid.NewGuid().ToString();
             SetShippingAddress(address);
@@ -25,11 +25,7 @@ namespace OrderService.Domain.Order
             SetCreditCard(creditCard);
             InvoiceCreditCardNumber = creditCard;
             CreatedAt = DateTime.UtcNow;
-
-            productDtos
-                .Select(i => new { Item = i, Product = products.Single(p => p.Id.ToString() == i.ProductId) })
-                .ToList()
-                .ForEach(x => AddProduct(x.Product, x.Item.ProductAmount));
+            AddDomainEvent(new OrderStartedDomainEvent(this));
         }
 
         public void AddProduct(Product.Product product, int quantity)

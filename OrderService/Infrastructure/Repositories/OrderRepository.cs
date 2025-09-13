@@ -13,13 +13,13 @@ namespace OrderService.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task AddAsync(Order order)
+        public async Task AddAsync(Order order, CancellationToken cancellationToken)
         {
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Order?> GetByIdAsync(string orderNumber)
+        public async Task<Order?> GetByIdAsync(string orderNumber, CancellationToken cancellationToken)
         {
             return await _context.Orders
                 .Include(o => o.Items)
